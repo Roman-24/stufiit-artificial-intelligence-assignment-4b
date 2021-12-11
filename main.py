@@ -6,12 +6,12 @@ import time
 from tkinter import *
 import numpy as np
 
-NUM_OF_POINTS = 20000
+NUM_OF_POINTS = 100
 INTERVAL = 5000
-DEVIATION = 100
+OFFSET = 100
 WINDOW_SIZE = 720
 
-colors = ['black', 'cyan', 'darkgreen', 'darkkhaki', 'darkviolet', 'deeppink', 'dimgrey', 'forestgreen', 'gold', 'hotpink', 'lawngreen', 'maroon', 'midnightblue', 'orange', 'red', 'saddlebrown', 'seagreen', 'slateblue', 'springgreen', 'violetred']
+colors = ['AntiqueWhite1', 'CadetBlue1', 'DarkGoldenrod1', 'DarkOliveGreen1', 'DarkOrange1', 'DarkOrchid1', 'DarkSeaGreen4', 'DeepPink2', 'HotPink4', 'IndianRed4', 'LavenderBlush2', 'LemonChiffon2', 'LightCyan2', 'LightGoldenrod1', 'LightPink1', 'LightSalmon3', 'LightSkyBlue4', 'LightYellow4', 'MediumOrchid1', 'MediumPurple2', 'OrangeRed3', 'PaleGreen4', 'PaleTurquoise1', 'PeachPuff2','RosyBrown1', 'RoyalBlue1', 'SlateGray2', 'SteelBlue4', 'VioletRed1', 'antique white', 'aquamarine', 'azure', 'blanched almond', 'blue', 'blue violet', 'brown1', 'burlywood4', 'cadet blue', 'chartreuse2', 'chocolate1', 'cornflower blue', 'cyan4', 'dark goldenrod', 'dark green', 'dark khaki', 'dark olive green', 'dark orange', 'dark orchid', 'dark salmon', 'dark sea green', 'dark slate blue', 'dark slate gray', 'dark turquoise', 'dark violet', 'deep pink', 'deep sky blue', 'dim gray', 'dodger blue', 'firebrick1', 'firebrick2', 'firebrick3', 'firebrick4', 'floral white', 'forest green', 'gainsboro', 'ghost white', 'gold', 'goldenrod', 'gray', 'gray99', 'green yellow', 'honeydew4', 'hot pink', 'indian red', 'ivory4', 'khaki', 'khaki4', 'lavender', 'lavender blush', 'lawn green', 'lemon chiffon', 'light blue', 'light coral', 'light cyan', 'light goldenrod', 'light goldenrod yellow', 'light grey', 'light pink', 'light salmon', 'light sea green', 'light sky blue', 'light slate blue', 'light slate gray', 'light steel blue', 'light yellow', 'lime green', 'linen', 'magenta4', 'maroon', 'maroon4', 'medium aquamarine', 'medium blue', 'medium orchid', 'medium purple', 'medium sea green', 'medium slate blue', 'medium spring green', 'medium turquoise', 'medium violet red', 'midnight blue', 'mint cream', 'misty rose', 'navajo white', 'navy', 'old lace', 'olive drab', 'orange', 'orange red', 'orange4', 'orchid1', 'orchid4', 'pale goldenrod', 'pale green', 'pale turquoise', 'pale violet red', 'papaya whip', 'peach puff', 'pink', 'pink4', 'plum1', 'plum4', 'powder blue', 'purple', 'red', 'rosy brown', 'royal blue', 'saddle brown', 'salmon', 'sandy brown', 'sea green', 'seashell2', 'sienna1', 'sky blue', 'slate blue', 'slate gray', 'snow', 'spring green', 'steel blue', 'tan1', 'thistle', 'thistle1', 'tomato', 'turquoise', 'turquoise1', 'violet red', 'wheat1', 'white smoke', 'yellow', 'yellow green']
 
 class Point:
     def __init__(self, x, y):
@@ -45,8 +45,8 @@ def generate_others(first_20):
     while counter < NUM_OF_POINTS:
         point = random.choice(first_20)
 
-        x_offset = int(random.gauss(-DEVIATION, DEVIATION))
-        y_offset = int(random.gauss(-DEVIATION, DEVIATION))
+        x_offset = int(random.gauss(-OFFSET, OFFSET))
+        y_offset = int(random.gauss(-OFFSET, OFFSET))
 
         new_point = Point(point.x + x_offset, point.y + y_offset)
         all_points.append(new_point)
@@ -155,8 +155,8 @@ def agglomerative(k, all_points):
 
     pass
 
-def coordinates(point):
-    size = (INTERVAL + DEVIATION) * 4
+def position_data(point):
+    size = (INTERVAL + OFFSET) * 4
     left = WINDOW_SIZE / 2 - 1
     right = WINDOW_SIZE / 2 + 1
     return int(point.x / size * WINDOW_SIZE + left), int(point.y / size * WINDOW_SIZE + left), int(point.x / size * WINDOW_SIZE + right), int(point.y / size * WINDOW_SIZE + right)
@@ -166,24 +166,24 @@ def draw(points, title):
     master.title(title)
     canvas = Canvas(master, width=WINDOW_SIZE, height=WINDOW_SIZE, bg='whitesmoke')
     canvas.pack()
+
     for point in points:
-        canvas.create_oval(coordinates(point), fill=colors[point.cluster_id], outline='')
+        canvas.create_oval(position_data(point), fill=colors[point.cluster_id], outline='')
 
     master.mainloop()
     pass
 
 def print_results(clusters):
     averages = calculate_avg_dist_for_clusters(clusters)
-    total_average = round(sum(averages) / len(averages), 3)
-
     good_clesters = 0
     bad_clesters = 0
     for avg in averages:
-        if avg > DEVIATION * 5:
+        if avg > OFFSET * 5:
             bad_clesters += 1
         else:
             good_clesters += 1
 
+    total_average = round(sum(averages) / len(averages), 4)
     return f"Pocet dobrych clusterov: {good_clesters}, pocet zlych clusterov: {bad_clesters}, globalny priemer vzdianosti: {total_average}"
 
 def main():
@@ -198,10 +198,10 @@ def main():
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = k_means(k, all_points, False)
-            #draw(all_points, "k_means, centroid")
+            draw(all_points, "k_means, centroid")
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
-        print("Time:", round((end_time - start_time) / 60, 3), "min")
+        print("Time:", round((end_time - start_time) / 60, 4), "min")
 
     elif user_choise == "2":
         start_time = time.time()
@@ -212,7 +212,7 @@ def main():
             draw(all_points, "k_means, medoid")
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
-        print("Time:", round((end_time - start_time) / 60, 3), "min")
+        print("Time:", round((end_time - start_time) / 60, 4), "min")
 
     elif user_choise == "3":
         start_time = time.time()
@@ -223,7 +223,7 @@ def main():
             draw(all_points, "divisive, centroid")
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
-        print("Time:", round((end_time - start_time) / 60, 3), "min")
+        print("Time:", round((end_time - start_time) / 60, 4), "min")
 
     elif user_choise == "4":
         start_time = time.time()
@@ -234,7 +234,7 @@ def main():
             draw(all_points, "agglomerative, centroid")
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
-        print("Time:", round((end_time - start_time) / 60, 3), "min")
+        print("Time:", round((end_time - start_time) / 60, 4), "min")
 
 if __name__ == "__main__":
     main()
