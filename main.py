@@ -43,7 +43,7 @@ def generate_others(first_20):
     counter = 0
 
     while counter < NUM_OF_POINTS:
-        point = random.choice(all_points)
+        point = random.choice(first_20)
 
         x_offset = int(random.gauss(-DEVIATION, DEVIATION))
         y_offset = int(random.gauss(-DEVIATION, DEVIATION))
@@ -81,8 +81,8 @@ def k_means(k, points, medoid_flag):
         clusters[point.cluster_id].append(point)
 
     # 20 krat prepocitaj stred a preskup clustre
-    for i in range(20):
-        print(f"Iter: {i}")
+    for i in range(100):
+        # print(f"Iter: {i}")
         clusters_new = []
         # vypocitanie novych centroidov
         for cluster_num in range(k):
@@ -104,7 +104,7 @@ def k_means(k, points, medoid_flag):
                 new_mid = new_mid_2
 
             str_temp = "medoid" if medoid_flag else "centroid"
-            print(f"Cluster: {cluster_num}, {str_temp}: x:{new_mid.x} y:{new_mid.y}")
+            # print(f"Cluster: {cluster_num}, {str_temp}: x:{new_mid.x} y:{new_mid.y}\n")
             clusters_new.append(new_mid)
 
         # vytvor nove clustre na zaklade novych stredov
@@ -119,7 +119,6 @@ def k_means(k, points, medoid_flag):
                     best_euclid_dist = euclid_dist
 
             clusters[point.cluster_id].append(point)
-        print()
 
     return points, clusters
 
@@ -152,6 +151,10 @@ def divisive(k, points):
 
     return points, clusters
 
+def agglomerative(k, all_points):
+
+    pass
+
 def coordinates(point):
     size = (INTERVAL + DEVIATION) * 4
     left = WINDOW_SIZE / 2 - 1
@@ -163,52 +166,75 @@ def draw(points, title):
     master.title(title)
     canvas = Canvas(master, width=WINDOW_SIZE, height=WINDOW_SIZE, bg='whitesmoke')
     canvas.pack()
-
     for point in points:
         canvas.create_oval(coordinates(point), fill=colors[point.cluster_id], outline='')
 
     master.mainloop()
     pass
 
+def print_results(clusters):
+    averages = calculate_avg_dist_for_clusters(clusters)
+    total_average = round(sum(averages) / len(averages), 3)
+
+    good_clesters = 0
+    bad_clesters = 0
+    for avg in averages:
+        if avg > DEVIATION * 5:
+            bad_clesters += 1
+        else:
+            good_clesters += 1
+
+    return f"Pocet dobrych clusterov: {good_clesters}, pocet zlych clusterov: {bad_clesters}, globalny priemer vzdianosti: {total_average}"
+
 def main():
     print("Pycharm starting..")
-    random.seed(420)
-
-    first_20 = init()
-    all_points = generate_others(first_20)
 
     user_choise = input("1) K-Means with centroid\n2) K-Means with medoid\n3) Divisive clustering\n4) Agglomerative clustering\nYour choice: ")
     k = 20
 
     if user_choise == "1":
         start_time = time.time()
-        all_points, clusters = k_means(k, all_points, False)
+        for i in range(10):
+            first_20 = init()
+            all_points = generate_others(first_20)
+            all_points, clusters = k_means(k, all_points, False)
+            #draw(all_points, "k_means, centroid")
+            print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 3), "min")
-        draw(all_points, "k_means, centroid")
-        # average = summarize(clusters)
-        pass
 
     elif user_choise == "2":
         start_time = time.time()
-        all_points, clusters = k_means(k, all_points, True)
+        for i in range(10):
+            first_20 = init()
+            all_points = generate_others(first_20)
+            all_points, clusters = k_means(k, all_points, True)
+            draw(all_points, "k_means, medoid")
+            print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 3), "min")
-        draw(all_points, "k_means, medoid")
-        # average = summarize(clusters)
-        pass
 
     elif user_choise == "3":
         start_time = time.time()
-        all_points, clusters = divisive(k, all_points)
+        for i in range(10):
+            first_20 = init()
+            all_points = generate_others(first_20)
+            all_points, clusters = divisive(k, all_points)
+            draw(all_points, "divisive, centroid")
+            print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 3), "min")
-        draw(all_points, "divisive, centroid")
-        # average = summarize(clusters)
-        pass
-    elif user_choise == "4":
 
-        pass
+    elif user_choise == "4":
+        start_time = time.time()
+        for i in range(10):
+            first_20 = init()
+            all_points = generate_others(first_20)
+            clusters = agglomerative(k, all_points)
+            draw(all_points, "agglomerative, centroid")
+            print(f"{i+1}: {print_results(clusters)}")
+        end_time = time.time()
+        print("Time:", round((end_time - start_time) / 60, 3), "min")
 
 if __name__ == "__main__":
     main()
