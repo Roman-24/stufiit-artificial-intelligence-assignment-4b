@@ -121,7 +121,36 @@ def k_means(k, points, medoid_flag):
             clusters[point.cluster_id].append(point)
         print()
 
-    return points
+    return points, clusters
+
+def calculate_avg_dist_for_clusters(clusters):
+
+    averages = []
+    for i in range(len(clusters)):
+        distances = []
+        for j in range(1, len(clusters[i])):
+            distances.append(euclidean_dist(clusters[i][j], clusters[i][0]))
+        averages.append(sum(distances) / len(clusters[i]))
+
+    return averages
+
+def divisive(k, points):
+    points, clusters = k_means(2, points, False)
+
+    while len(clusters) < k:
+        averages = calculate_avg_dist_for_clusters(clusters)
+        cluster = clusters[averages.index(max(averages))]
+        i_del = clusters.index(cluster)
+        clusters.__delitem__(i_del)
+        if len(cluster) > 1:
+            all_points, temp_clusters = k_means(2, cluster, False)
+            clusters += temp_clusters
+
+    for cluster in clusters:
+        for point in cluster:
+            point.cluster_id = clusters.index(cluster)
+
+    return points, clusters
 
 def coordinates(point):
     size = (INTERVAL + DEVIATION) * 4
@@ -153,7 +182,7 @@ def main():
 
     if user_choise == "1":
         start_time = time.time()
-        all_points = k_means(k, copy.deepcopy(all_points), False)
+        all_points, clusters = k_means(k, all_points, False)
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 3), "min")
         draw(all_points, "k_means, centroid")
@@ -162,7 +191,7 @@ def main():
 
     elif user_choise == "2":
         start_time = time.time()
-        all_points = k_means(k, copy.deepcopy(all_points), True)
+        all_points, clusters = k_means(k, all_points, True)
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 3), "min")
         draw(all_points, "k_means, medoid")
@@ -170,11 +199,16 @@ def main():
         pass
 
     elif user_choise == "3":
+        start_time = time.time()
+        all_points, clusters = divisive(k, all_points)
+        end_time = time.time()
+        print("Time:", round((end_time - start_time) / 60, 3), "min")
+        draw(all_points, "divisive, centroid")
+        # average = summarize(clusters)
         pass
     elif user_choise == "4":
-        pass
-    pass
 
+        pass
 
 if __name__ == "__main__":
     main()
