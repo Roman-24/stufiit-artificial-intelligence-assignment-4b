@@ -5,7 +5,7 @@ import time
 from tkinter import *
 import numpy as np
 
-NUM_OF_POINTS = 200
+NUM_OF_POINTS = 10000
 INTERVAL = 5000
 OFFSET = 100
 SIZE_OF_WINDOW = 720
@@ -157,25 +157,26 @@ def divisive(k, points):
 
 def agglomerative(k, all_points):
 
-    clusters = np.array([])
+    clusters = []
     for i in range(len(all_points)):
-        np.append(clusters, [all_points[i]], axis=0)
+        clusters.append([all_points[i]])
 
     # urob maticu
-    matrix = np.array([[np.uint16(0) for _ in range(len(all_points))] for _ in range(len(all_points))])
-    print("boa")
+    matrix = [[0 for _ in range(len(all_points))] for _ in range(len(all_points))]
+
     for i in range(len(all_points)):
         for j in range(len(all_points)):
             if i == j:
-                matrix[i][j] = np.uint16(65535)
+                matrix[i][j] = 999999
                 continue
             elif matrix[i][j] == 0:
-                distance = np.uint16(euclidean_dist(clusters[i][0], clusters[j][0]))
+                distance = euclidean_dist(clusters[i][0], clusters[j][0])
                 matrix[i][j] = distance
                 matrix[j][i] = distance
 
     while len(clusters) > k:
         # najdi najblizsie
+        matrix = np.array(matrix)
         minimal = matrix.min()
         minimal_pair = np.where(matrix == minimal)
         minimal_pair = [max(minimal_pair[0][0], minimal_pair[1][0]), min(minimal_pair[0][0], minimal_pair[1][0])]
@@ -197,17 +198,21 @@ def agglomerative(k, all_points):
         matrix = np.delete(matrix, minimal_pair[1], 0)
         matrix = np.delete(matrix, minimal_pair[0], 1)
         matrix = np.delete(matrix, minimal_pair[1], 1)
-        clusters = np.delete(clusters, minimal_pair[0], 0)
-        clusters = np.delete(clusters, minimal_pair[1], 0)
+        clusters.pop(minimal_pair[0])
+        clusters.pop(minimal_pair[1])
 
-        clusters = np.append(clusters, cluster)
-        matrix = np.append(matrix, np.array([[np.uint16(65535) for _ in range(len(matrix))]]), 0)
-        matrix = np.append(matrix, np.array([[np.uint16(65535)] for _ in range(len(matrix))]), 1)
+        clusters.append(cluster)
+        matrix = np.append(matrix, np.array([[np.uint16(999999) for _ in range(len(matrix))]]), 0)
+        matrix = np.append(matrix, np.array([[np.uint16(999999)] for _ in range(len(matrix))]), 1)
 
         for i in range(len(matrix) - 1):
-            distance = np.uint16(euclidean_dist(clusters[-1][0], clusters[i][0]))
+            distance = euclidean_dist(clusters[-1][0], clusters[i][0])
             matrix[-1][i] = distance
             matrix[i][-1] = distance
+
+        for cluster in clusters:
+            for point in cluster:
+                point.cluster_id = clusters.index(cluster)
 
     return clusters
 
@@ -243,7 +248,7 @@ def print_results(clusters):
 
 def main():
     print("Pycharm starting..")
-    my_range = 10
+    my_range = 1
     user_choise = input("1) K-Means with centroid\n2) K-Means with medoid\n3) Divisive clustering\n4) Agglomerative clustering\nYour choice: ")
     k = 20
 
@@ -285,6 +290,8 @@ def main():
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
+        while True:
+            pass
 
     elif user_choise == "4":
         start_time = time.time()
@@ -296,6 +303,8 @@ def main():
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
+        while True:
+            pass
 
 if __name__ == "__main__":
     # random.seed(500)
