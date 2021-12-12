@@ -5,7 +5,7 @@ import time
 from tkinter import *
 import numpy as np
 
-NUM_OF_POINTS = 20000
+NUM_OF_POINTS = 200
 INTERVAL = 5000
 OFFSET = 100
 SIZE_OF_WINDOW = 720
@@ -80,7 +80,7 @@ def k_means(k, points, medoid_flag):
         clusters[point.cluster_id].append(point)
 
     # 20 krat prepocitaj stred a preskup clustre
-    for i in range(100):
+    for i in range(10):
         # print(f"Iter: {i}")
         clusters_new = []
         # vypocitanie novych centroidov
@@ -91,14 +91,16 @@ def k_means(k, points, medoid_flag):
 
             # z centroid urob medoid
             if medoid_flag:
-                best_euclid_dist = 999999999
-                for point_temp in points:
+                best_euclid_dist = 9999999999999
+                for m in range(len(clusters[cluster_num])):
+                    temp_sum = 0
+                    for n in range(len(clusters[cluster_num])):
 
-                    euclid_dist = euclidean_dist(new_mid, point_temp)
+                        temp_sum += euclidean_dist(clusters[cluster_num][m], clusters[cluster_num][n])
 
-                    if euclid_dist < best_euclid_dist:
-                        new_mid_2 = point_temp
-                        best_euclid_dist = euclid_dist
+                    if temp_sum < best_euclid_dist:
+                        new_mid_2 = clusters[cluster_num][m]
+                        best_euclid_dist = temp_sum
 
                 new_mid = new_mid_2
 
@@ -155,7 +157,59 @@ def divisive(k, points):
 
 def agglomerative(k, all_points):
 
-    pass
+    clusters = np.array([])
+    for i in range(len(all_points)):
+        np.append(clusters, [all_points[i]], axis=0)
+
+    # urob maticu
+    matrix = np.array([[np.uint16(0) for _ in range(len(all_points))] for _ in range(len(all_points))])
+    print("boa")
+    for i in range(len(all_points)):
+        for j in range(len(all_points)):
+            if i == j:
+                matrix[i][j] = np.uint16(65535)
+                continue
+            elif matrix[i][j] == 0:
+                distance = np.uint16(euclidean_dist(clusters[i][0], clusters[j][0]))
+                matrix[i][j] = distance
+                matrix[j][i] = distance
+
+    while len(clusters) > k:
+        # najdi najblizsie
+        minimal = matrix.min()
+        minimal_pair = np.where(matrix == minimal)
+        minimal_pair = [max(minimal_pair[0][0], minimal_pair[1][0]), min(minimal_pair[0][0], minimal_pair[1][0])]
+
+        # merge cluters
+        cluster = []
+        for point in clusters[minimal_pair[0]]:
+            cluster.append(point)
+        for point in clusters[minimal_pair[1]]:
+            cluster.append(point)
+
+        # stred pre mergnuty cluster
+        mean_x = np.mean([point.x for point in cluster])
+        mean_y = np.mean([point.y for point in cluster])
+        cluster.insert(0, Point(mean_x, mean_y))
+
+        #update matrix
+        matrix = np.delete(matrix, minimal_pair[0], 0)
+        matrix = np.delete(matrix, minimal_pair[1], 0)
+        matrix = np.delete(matrix, minimal_pair[0], 1)
+        matrix = np.delete(matrix, minimal_pair[1], 1)
+        clusters = np.delete(clusters, minimal_pair[0], 0)
+        clusters = np.delete(clusters, minimal_pair[1], 0)
+
+        clusters = np.append(clusters, cluster)
+        matrix = np.append(matrix, np.array([[np.uint16(65535) for _ in range(len(matrix))]]), 0)
+        matrix = np.append(matrix, np.array([[np.uint16(65535)] for _ in range(len(matrix))]), 1)
+
+        for i in range(len(matrix) - 1):
+            distance = np.uint16(euclidean_dist(clusters[-1][0], clusters[i][0]))
+            matrix[-1][i] = distance
+            matrix[i][-1] = distance
+
+    return clusters
 
 def position_data(point, size):
     size_repair = (INTERVAL + OFFSET) * 4
@@ -196,6 +250,7 @@ def main():
     if user_choise == "1":
         start_time = time.time()
         for i in range(my_range):
+            random.seed(500 + i * 2)
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = k_means(k, all_points, False)
@@ -203,17 +258,22 @@ def main():
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
+        while True:
+            pass
 
     elif user_choise == "2":
         start_time = time.time()
         for i in range(my_range):
+            random.seed(500 + i * 2)
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = k_means(k, all_points, True)
-            # draw(all_points, "k_means, medoid", clusters)
+            #draw(all_points, "k_means, medoid", clusters)
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
+        while True:
+            pass
 
     elif user_choise == "3":
         start_time = time.time()
