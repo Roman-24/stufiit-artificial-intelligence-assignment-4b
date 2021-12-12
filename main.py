@@ -3,12 +3,13 @@ import random
 import math
 import time
 from tkinter import *
+import sys
 import numpy as np
 
-NUM_OF_POINTS = 10000
+NUM_OF_POINTS = 1000
 INTERVAL = 5000
 OFFSET = 100
-SIZE_OF_WINDOW = 720
+SIZE_OF_WINDOW = 900
 
 colors = ['AntiqueWhite1', 'CadetBlue1', 'DarkGoldenrod1', 'DarkOliveGreen1', 'DarkOrange1', 'DarkSeaGreen4', 'HotPink4', 'IndianRed4', 'LavenderBlush2', 'LemonChiffon2', 'LightCyan2', 'LightGoldenrod1', 'LightPink1', 'LightSalmon3', 'LightSkyBlue4', 'LightYellow4', 'MediumOrchid1', 'MediumPurple2', 'OrangeRed3', 'PaleGreen4', 'PaleTurquoise1', 'PeachPuff2','RosyBrown1', 'RoyalBlue1', 'SlateGray2', 'SteelBlue4', 'VioletRed1', 'antique white', 'aquamarine', 'azure', 'blanched almond', 'blue', 'blue violet', 'brown1', 'burlywood4', 'cadet blue', 'chartreuse2', 'chocolate1', 'cornflower blue', 'cyan4', 'dark goldenrod', 'dark green', 'dark khaki', 'dark olive green', 'dark orange', 'dark orchid', 'dark salmon', 'dark sea green', 'dark slate blue', 'dark slate gray', 'dark turquoise', 'dark violet', 'deep pink', 'deep sky blue', 'dim gray', 'dodger blue', 'firebrick1', 'firebrick2', 'firebrick3', 'firebrick4', 'floral white', 'forest green', 'gainsboro', 'ghost white', 'gold', 'goldenrod', 'gray', 'gray99', 'green yellow', 'honeydew4', 'hot pink', 'indian red', 'ivory4', 'khaki', 'khaki4', 'lavender', 'lavender blush', 'lawn green', 'lemon chiffon', 'light blue', 'light coral', 'light cyan', 'light goldenrod', 'light goldenrod yellow', 'light grey', 'light pink', 'light salmon', 'light sea green', 'light sky blue', 'light slate blue', 'light slate gray', 'light steel blue', 'light yellow', 'lime green', 'linen', 'magenta4', 'maroon', 'maroon4', 'medium aquamarine', 'medium blue', 'medium orchid', 'medium purple', 'medium sea green', 'medium slate blue', 'medium spring green', 'medium turquoise', 'medium violet red', 'midnight blue', 'mint cream', 'misty rose', 'navajo white', 'navy', 'old lace', 'olive drab', 'orange', 'orange red', 'orange4', 'orchid1', 'orchid4', 'pale goldenrod', 'pale green', 'pale turquoise', 'pale violet red', 'papaya whip', 'peach puff', 'pink', 'pink4', 'plum1', 'plum4', 'powder blue', 'purple', 'red', 'rosy brown', 'royal blue', 'saddle brown', 'salmon', 'sandy brown', 'sea green', 'seashell2', 'sienna1', 'sky blue', 'slate blue', 'slate gray', 'snow', 'spring green', 'steel blue', 'tan1', 'thistle', 'thistle1', 'tomato', 'turquoise', 'turquoise1', 'violet red', 'wheat1', 'white smoke', 'yellow', 'yellow green']
 
@@ -69,7 +70,7 @@ def k_means(k, points, medoid_flag):
 
     # rozdelenie points do clusterou podla toho k comu bude najblizsie
     for point in points:
-        best_euclid_dist = 999999999
+        best_euclid_dist = sys.maxsize
         for cluster in clusters:
             euclid_dist = euclidean_dist(cluster[0], point)
 
@@ -91,7 +92,7 @@ def k_means(k, points, medoid_flag):
 
             # z centroid urob medoid
             if medoid_flag:
-                best_euclid_dist = 9999999999999
+                best_euclid_dist = sys.maxsize
                 for m in range(len(clusters[cluster_num])):
                     temp_sum = 0
                     for n in range(len(clusters[cluster_num])):
@@ -112,7 +113,7 @@ def k_means(k, points, medoid_flag):
         del(clusters)
         clusters = [[] for _ in range(k)]
         for point in points:
-            best_euclid_dist = 999999999
+            best_euclid_dist = sys.maxsize
             for cluster_centroid in clusters_new:
                 euclid_dist = euclidean_dist(cluster_centroid, point)
 
@@ -163,13 +164,11 @@ def agglomerative(k, all_points):
 
     # urob maticu
     matrix = [[0 for _ in range(len(all_points))] for _ in range(len(all_points))]
-
     for i in range(len(all_points)):
         for j in range(len(all_points)):
             if i == j:
-                matrix[i][j] = 999999
-                continue
-            elif matrix[i][j] == 0:
+                matrix[i][j] = sys.maxsize
+            else:
                 distance = euclidean_dist(clusters[i][0], clusters[j][0])
                 matrix[i][j] = distance
                 matrix[j][i] = distance
@@ -187,7 +186,6 @@ def agglomerative(k, all_points):
             cluster.append(point)
         for point in clusters[minimal_pair[1]]:
             cluster.append(point)
-
         # stred pre mergnuty cluster
         mean_x = np.mean([point.x for point in cluster])
         mean_y = np.mean([point.y for point in cluster])
@@ -200,19 +198,19 @@ def agglomerative(k, all_points):
         matrix = np.delete(matrix, minimal_pair[1], 1)
         clusters.pop(minimal_pair[0])
         clusters.pop(minimal_pair[1])
-
         clusters.append(cluster)
-        matrix = np.append(matrix, np.array([[np.uint16(999999) for _ in range(len(matrix))]]), 0)
-        matrix = np.append(matrix, np.array([[np.uint16(999999)] for _ in range(len(matrix))]), 1)
+        matrix = np.append(matrix, np.array([[np.uint64(sys.maxsize) for _ in range(len(matrix))]]), 0)
+        matrix = np.append(matrix, np.array([[np.uint64(sys.maxsize)] for _ in range(len(matrix))]), 1)
 
         for i in range(len(matrix) - 1):
             distance = euclidean_dist(clusters[-1][0], clusters[i][0])
             matrix[-1][i] = distance
             matrix[i][-1] = distance
 
-        for cluster in clusters:
-            for point in cluster:
-                point.cluster_id = clusters.index(cluster)
+    # farbenie
+    for cluster in clusters:
+        for point in cluster:
+            point.cluster_id = clusters.index(cluster)
 
     return clusters
 
