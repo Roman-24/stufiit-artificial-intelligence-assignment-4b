@@ -6,10 +6,9 @@ from tkinter import *
 import sys
 import numpy as np
 
-NUM_OF_POINTS = 1000
+NUM_OF_POINTS = 15000
 INTERVAL = 5000
 OFFSET = 100
-SIZE_OF_WINDOW = 900
 
 colors = ['AntiqueWhite1', 'CadetBlue1', 'DarkGoldenrod1', 'DarkOliveGreen1', 'DarkOrange1', 'DarkSeaGreen4', 'HotPink4', 'IndianRed4', 'LavenderBlush2', 'LemonChiffon2', 'LightCyan2', 'LightGoldenrod1', 'LightPink1', 'LightSalmon3', 'LightSkyBlue4', 'LightYellow4', 'MediumOrchid1', 'MediumPurple2', 'OrangeRed3', 'PaleGreen4', 'PaleTurquoise1', 'PeachPuff2','RosyBrown1', 'RoyalBlue1', 'SlateGray2', 'SteelBlue4', 'VioletRed1', 'antique white', 'aquamarine', 'azure', 'blanched almond', 'blue', 'blue violet', 'brown1', 'burlywood4', 'cadet blue', 'chartreuse2', 'chocolate1', 'cornflower blue', 'cyan4', 'dark goldenrod', 'dark green', 'dark khaki', 'dark olive green', 'dark orange', 'dark orchid', 'dark salmon', 'dark sea green', 'dark slate blue', 'dark slate gray', 'dark turquoise', 'dark violet', 'deep pink', 'deep sky blue', 'dim gray', 'dodger blue', 'firebrick1', 'firebrick2', 'firebrick3', 'firebrick4', 'floral white', 'forest green', 'gainsboro', 'ghost white', 'gold', 'goldenrod', 'gray', 'gray99', 'green yellow', 'honeydew4', 'hot pink', 'indian red', 'ivory4', 'khaki', 'khaki4', 'lavender', 'lavender blush', 'lawn green', 'lemon chiffon', 'light blue', 'light coral', 'light cyan', 'light goldenrod', 'light goldenrod yellow', 'light grey', 'light pink', 'light salmon', 'light sea green', 'light sky blue', 'light slate blue', 'light slate gray', 'light steel blue', 'light yellow', 'lime green', 'linen', 'magenta4', 'maroon', 'maroon4', 'medium aquamarine', 'medium blue', 'medium orchid', 'medium purple', 'medium sea green', 'medium slate blue', 'medium spring green', 'medium turquoise', 'medium violet red', 'midnight blue', 'mint cream', 'misty rose', 'navajo white', 'navy', 'old lace', 'olive drab', 'orange', 'orange red', 'orange4', 'orchid1', 'orchid4', 'pale goldenrod', 'pale green', 'pale turquoise', 'pale violet red', 'papaya whip', 'peach puff', 'pink', 'pink4', 'plum1', 'plum4', 'powder blue', 'purple', 'red', 'rosy brown', 'royal blue', 'saddle brown', 'salmon', 'sandy brown', 'sea green', 'seashell2', 'sienna1', 'sky blue', 'slate blue', 'slate gray', 'snow', 'spring green', 'steel blue', 'tan1', 'thistle', 'thistle1', 'tomato', 'turquoise', 'turquoise1', 'violet red', 'wheat1', 'white smoke', 'yellow', 'yellow green']
 
@@ -37,6 +36,7 @@ def init():
 
     return first_20
 
+# vygeneruje dalsich 20k bodov podľa tých pociatocnych 20
 def generate_others(first_20):
     all_points = []
     all_points += first_20
@@ -51,7 +51,6 @@ def generate_others(first_20):
         new_point = Point(point.x + x_offset, point.y + y_offset)
         all_points.append(new_point)
         counter += 1
-
     return all_points
 
 # vypocita vzdialenost dvoch bodov
@@ -128,14 +127,12 @@ def k_means(k, points, medoid_flag):
     return points, clusters
 
 def calculate_avg_dist_for_clusters(clusters):
-
     averages = []
     for i in range(len(clusters)):
         distances = []
         for j in range(1, len(clusters[i])):
             distances.append(euclidean_dist(clusters[i][j], clusters[i][0]))
         averages.append(sum(distances) / len(clusters[i]))
-
     return averages
 
 def divisive(k, points):
@@ -158,6 +155,9 @@ def divisive(k, points):
 
 def agglomerative(k, all_points):
 
+    # https://numpy.org/doc/stable/reference/generated/numpy.array.html
+    # https://online.stat.psu.edu/stat555/node/86/
+
     clusters = []
     for i in range(len(all_points)):
         clusters.append([all_points[i]])
@@ -175,16 +175,16 @@ def agglomerative(k, all_points):
 
     while len(clusters) > k:
         # najdi najblizsie
+        # https://www.tutorialspoint.com/python_data_structure/python_matrix.htm
         matrix = np.array(matrix)
-        minimal = matrix.min()
-        minimal_pair = np.where(matrix == minimal)
-        minimal_pair = [max(minimal_pair[0][0], minimal_pair[1][0]), min(minimal_pair[0][0], minimal_pair[1][0])]
+        wrost_dist = np.where(matrix == matrix.min())
+        wrost_dist = [max(wrost_dist[0][0], wrost_dist[1][0]), min(wrost_dist[0][0], wrost_dist[1][0])]
 
         # merge cluters
         cluster = []
-        for point in clusters[minimal_pair[0]]:
+        for point in clusters[wrost_dist[0]]:
             cluster.append(point)
-        for point in clusters[minimal_pair[1]]:
+        for point in clusters[wrost_dist[1]]:
             cluster.append(point)
         # stred pre mergnuty cluster
         mean_x = np.mean([point.x for point in cluster])
@@ -192,12 +192,12 @@ def agglomerative(k, all_points):
         cluster.insert(0, Point(mean_x, mean_y))
 
         #update matrix
-        matrix = np.delete(matrix, minimal_pair[0], 0)
-        matrix = np.delete(matrix, minimal_pair[1], 0)
-        matrix = np.delete(matrix, minimal_pair[0], 1)
-        matrix = np.delete(matrix, minimal_pair[1], 1)
-        clusters.pop(minimal_pair[0])
-        clusters.pop(minimal_pair[1])
+        matrix = np.delete(matrix, wrost_dist[0], 0)
+        matrix = np.delete(matrix, wrost_dist[1], 0)
+        matrix = np.delete(matrix, wrost_dist[0], 1)
+        matrix = np.delete(matrix, wrost_dist[1], 1)
+        clusters.pop(wrost_dist[0])
+        clusters.pop(wrost_dist[1])
         clusters.append(cluster)
         matrix = np.append(matrix, np.array([[np.uint64(sys.maxsize) for _ in range(len(matrix))]]), 0)
         matrix = np.append(matrix, np.array([[np.uint64(sys.maxsize)] for _ in range(len(matrix))]), 1)
@@ -214,6 +214,7 @@ def agglomerative(k, all_points):
 
     return clusters
 
+SIZE_OF_WINDOW = 900
 def position_data(point, size):
     size_repair = (INTERVAL + OFFSET) * 4
     left = (SIZE_OF_WINDOW / 2) - size
@@ -236,8 +237,8 @@ def print_results(clusters):
     averages = calculate_avg_dist_for_clusters(clusters)
     good_clesters = 0
     bad_clesters = 0
-    for avg in averages:
-        if avg > OFFSET * 5:
+    for average in averages:
+        if average > OFFSET * 5:
             bad_clesters += 1
         else:
             good_clesters += 1
@@ -247,7 +248,7 @@ def print_results(clusters):
 def main():
     print("Pycharm starting..")
     my_range = 1
-    user_choise = input("1) K-Means with centroid\n2) K-Means with medoid\n3) Divisive clustering\n4) Agglomerative clustering\nYour choice: ")
+    user_choise = input("1) K-Means, centroid\n2) K-Means, medoid\n3) Divisive clustering\n4) Agglomerative clustering\nYour choice: ")
     k = 20
 
     if user_choise == "1":
@@ -257,7 +258,7 @@ def main():
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = k_means(k, all_points, False)
-            #draw(all_points, "k_means, centroid", clusters)
+            draw(all_points, "k_means, centroid", clusters)
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
@@ -271,7 +272,7 @@ def main():
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = k_means(k, all_points, True)
-            #draw(all_points, "k_means, medoid", clusters)
+            draw(all_points, "k_means, medoid", clusters)
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
@@ -284,7 +285,7 @@ def main():
             first_20 = init()
             all_points = generate_others(first_20)
             all_points, clusters = divisive(k, all_points)
-            # draw(all_points, "divisive, centroid", clusters)
+            draw(all_points, "divisive, centroid", clusters)
             print(f"{i+1}: {print_results(clusters)}")
         end_time = time.time()
         print("Time:", round((end_time - start_time) / 60, 4), "min")
